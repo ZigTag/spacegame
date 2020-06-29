@@ -1,7 +1,11 @@
+//TODO: Please organize code.
+
 use coffee::graphics::{Color, Frame, Mesh, Point, Shape, Window, WindowSettings};
 use coffee::load::Task;
 use coffee::{Game, Result, Timer};
+use std::f32::consts::PI;
 
+const TICKS_PER_SECOND: u16 = 60;
 const G: f32 = 6.743e-11;
 
 fn main() -> Result<()> {
@@ -24,6 +28,7 @@ struct Planet {
 struct MyGame {
     main_planet: Planet,
     satellite_planet: Planet,
+    sim_time: i32,
 }
 
 impl Game for MyGame {
@@ -45,18 +50,47 @@ impl Game for MyGame {
                 radius: 10.0,
                 position: Point::new(800.0 / 2.0 - 200.0, 800.0 / 2.0),
             },
+            sim_time: 0,
         })
     }
 
     fn update(&mut self, _window: &Window) {
+        let tick_time = self.sim_time as f32 / TICKS_PER_SECOND as f32;
+        self.sim_time += 1;
+
+        let eccentricity: i32 = 0;
+
         let r = ((self.satellite_planet.position.coords[0] - self.main_planet.position.coords[0])
             .powi(2)
             + (self.satellite_planet.position.coords[1] - self.main_planet.position.coords[1])
                 .powi(2))
         .sqrt();
 
-        let velocity = (G * self.main_planet.mass) / r.powi(2);
+        let gravitational_parameter = G * self.main_planet.mass;
 
+        let _velocity = gravitational_parameter / r.powi(2);
+
+        let p = (((4.0 * PI.powi(2)) * r.powi(3)) / gravitational_parameter).sqrt();
+
+        let semimajor_length = p / (1.0 - (eccentricity as f32 / 100.0).powi(2));
+
+        let time = (2.0 * PI) * (semimajor_length.powi(3) / gravitational_parameter).sqrt();
+
+        let sweep = 2.0 * PI / time;
+
+        let mean_anomaly = sweep * (tick_time - PI.powi(2));
+
+        let mut eccentric_anomaly: f32 = mean_anomaly;
+
+        for _ in 0..(eccentricity + 1) {
+            eccentric_anomaly =
+                mean_anomaly + ((eccentricity as f32 / 100.0) * eccentric_anomaly.sin());
+        }
+
+        let _true_anomaly = ((eccentric_anomaly.cos() - (eccentricity as f32 / 100.0))
+            / (1.0 - (eccentricity as f32 / 100.0))
+            * eccentric_anomaly.cos())
+        .acos();
     }
 
     fn draw(&mut self, frame: &mut Frame, _timer: &Timer) {
