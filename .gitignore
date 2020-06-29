@@ -1,0 +1,5 @@
+/target
+
+# Excludes Intellij IDEA stuff
+.idea
+*.iml
