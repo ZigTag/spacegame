@@ -54,6 +54,31 @@ impl Game for MyGame {
         })
     }
 
+    fn draw(&mut self, frame: &mut Frame, _timer: &Timer) {
+        // Clear the current frame
+        frame.clear(Color::BLACK);
+
+        // Draw your game here. Check out the `graphics` module!
+        let mut mesh = Mesh::new();
+
+        mesh.fill(
+            Shape::Circle {
+                center: self.main_planet.position,
+                radius: self.main_planet.radius,
+            },
+            self.main_planet.color,
+        );
+        mesh.fill(
+            Shape::Circle {
+                center: self.satellite_planet.position,
+                radius: self.satellite_planet.radius,
+            },
+            self.satellite_planet.color,
+        );
+
+        mesh.draw(&mut frame.as_target());
+    }
+
     fn update(&mut self, _window: &Window) {
         let tick_time = self.sim_time as f32 / TICKS_PER_SECOND as f32;
         self.sim_time += 1;
@@ -91,30 +116,5 @@ impl Game for MyGame {
             / (1.0 - (eccentricity as f32 / 100.0))
             * eccentric_anomaly.cos())
         .acos();
-    }
-
-    fn draw(&mut self, frame: &mut Frame, _timer: &Timer) {
-        // Clear the current frame
-        frame.clear(Color::BLACK);
-
-        // Draw your game here. Check out the `graphics` module!
-        let mut mesh = Mesh::new();
-
-        mesh.fill(
-            Shape::Circle {
-                center: self.main_planet.position,
-                radius: self.main_planet.radius,
-            },
-            self.main_planet.color,
-        );
-        mesh.fill(
-            Shape::Circle {
-                center: self.satellite_planet.position,
-                radius: self.satellite_planet.radius,
-            },
-            self.satellite_planet.color,
-        );
-
-        mesh.draw(&mut frame.as_target());
     }
 }
