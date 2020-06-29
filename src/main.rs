@@ -5,7 +5,7 @@ use coffee::load::Task;
 use coffee::{Game, Result, Timer};
 use std::f32::consts::PI;
 
-const TICKS_PER_SECOND: u16 = 60;
+
 const G: f32 = 6.743e-11;
 
 fn main() -> Result<()> {
@@ -35,6 +35,7 @@ struct MyGame {
 impl Game for MyGame {
     type Input = (); // No input data
     type LoadingScreen = (); // No loading screen
+    const TICKS_PER_SECOND: u16 = 60;
 
     fn load(_window: &Window) -> Task<MyGame> {
         // Load your game assets here. Check out the `load` module!
@@ -83,7 +84,7 @@ impl Game for MyGame {
     }
 
     fn update(&mut self, _window: &Window) {
-        let tick_time = self.sim_time as f32 / TICKS_PER_SECOND as f32;
+        // let tick_time = self.sim_time as f32 / TICKS_PER_SECOND as f32;
         self.sim_time += 1;
 
         let eccentricity: i32 = 0;
@@ -102,14 +103,14 @@ impl Game for MyGame {
         let p =
             (((4.0 * PI.powi(2)) * planetary_distance.powi(3)) / gravitational_parameter).sqrt();
 
-        let semimajor_length = p / (1.0 - (eccentricity as f32 / 100.0).powi(2));
+        let semimajor_axis = p / (1.0 - (eccentricity as f32 / 100.0).powi(2));
 
-        // let time = (2.0 * PI) * (semimajor_length.powi(3) / gravitational_parameter).sqrt();
+        // let time = (2.0 * PI) * (semimajor_axis.powi(3) / gravitational_parameter).sqrt();
 
         // let sweep = 2.0 * PI / time;
 
         let mean_anomaly =
-            (gravitational_parameter / semimajor_length.powi(3)).sqrt() * (tick_time - PI.powi(2));
+            (gravitational_parameter / semimajor_axis.powi(3)).sqrt() * (0.0 - PI.powi(2)); // Change the 0.0 too the time til periapsis
 
         let mut eccentric_anomaly: f32 = mean_anomaly;
 
@@ -127,10 +128,14 @@ impl Game for MyGame {
         let position_vector =
             planetary_distance * Point::new(true_anomaly.cos(), true_anomaly.sin());
 
-        self.satellite_planet.position = position_vector;
+        // let argument_of_periapsis =
+
+        let adjusted_postion_vector = Point::new(position_vector.coords[0] - position_vector.coords[1], position_vector.coords[0] + position_vector.coords[1]);
+
+        self.satellite_planet.position = adjusted_postion_vector;
 
         println!(
-            "anmomalies {} {} {}",
+            "anomalies {} {} {}",
             mean_anomaly, eccentric_anomaly, true_anomaly
         );
         println!("{:?}", position_vector)
