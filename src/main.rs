@@ -5,7 +5,6 @@ use coffee::load::Task;
 use coffee::{Game, Result, Timer};
 use std::f32::consts::PI;
 
-
 const G: f32 = 6.743e-11;
 
 fn main() -> Result<()> {
@@ -35,7 +34,7 @@ struct MyGame {
 impl Game for MyGame {
     type Input = (); // No input data
     type LoadingScreen = (); // No loading screen
-    const TICKS_PER_SECOND: u16 = 60;
+    const TICKS_PER_SECOND: u16 = 1;
 
     fn load(_window: &Window) -> Task<MyGame> {
         // Load your game assets here. Check out the `load` module!
@@ -130,7 +129,10 @@ impl Game for MyGame {
 
         // let argument_of_periapsis =
 
-        let adjusted_postion_vector = Point::new(position_vector.coords[0] - position_vector.coords[1], position_vector.coords[0] + position_vector.coords[1]);
+        let adjusted_postion_vector = Point::new(
+            position_vector.coords[0] - position_vector.coords[1],
+            position_vector.coords[0] + position_vector.coords[1],
+        );
 
         self.satellite_planet.position = adjusted_postion_vector;
 
