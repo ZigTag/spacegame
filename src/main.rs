@@ -88,7 +88,8 @@ impl Game for MyGame {
 
         let eccentricity: i32 = 0;
 
-        let planetary_distance = ((self.satellite_planet.position.coords[0] - self.main_planet.position.coords[0])
+        let planetary_distance = ((self.satellite_planet.position.coords[0]
+            - self.main_planet.position.coords[0])
             .powi(2)
             + (self.satellite_planet.position.coords[1] - self.main_planet.position.coords[1])
                 .powi(2))
@@ -96,17 +97,19 @@ impl Game for MyGame {
 
         let gravitational_parameter = G * self.main_planet.mass;
 
-        let _velocity = gravitational_parameter / planetary_distance.powi(2);
+        // let velocity = gravitational_parameter / planetary_distance.powi(2);
 
-        let p = (((4.0 * PI.powi(2)) * planetary_distance.powi(3)) / gravitational_parameter).sqrt();
+        let p =
+            (((4.0 * PI.powi(2)) * planetary_distance.powi(3)) / gravitational_parameter).sqrt();
 
         let semimajor_length = p / (1.0 - (eccentricity as f32 / 100.0).powi(2));
 
-        let time = (2.0 * PI) * (semimajor_length.powi(3) / gravitational_parameter).sqrt();
+        // let time = (2.0 * PI) * (semimajor_length.powi(3) / gravitational_parameter).sqrt();
 
         // let sweep = 2.0 * PI / time;
 
-        let mean_anomaly = (gravitational_parameter / semimajor_length.powi(3)).sqrt() * (tick_time - PI.powi(2));
+        let mean_anomaly =
+            (gravitational_parameter / semimajor_length.powi(3)).sqrt() * (tick_time - PI.powi(2));
 
         let mut eccentric_anomaly: f32 = mean_anomaly;
 
@@ -115,17 +118,21 @@ impl Game for MyGame {
                 mean_anomaly + ((eccentricity as f32 / 100.0) * eccentric_anomaly.sin());
         }
 
-        let true_anomaly = ((eccentric_anomaly.cos() - (eccentricity as f32 / 100.0))
-            / (1.0 - (eccentricity as f32 / 100.0))
-            * eccentric_anomaly.cos())
-        .acos();
+        let true_anomaly = 2.0
+            * (((1.0 + (eccentricity as f32 / 100.0)) / 1.0 - (eccentricity as f32 / 100.0))
+                .sqrt()
+                * (eccentric_anomaly / 2.0).tan())
+            .atan();
 
-        let position_vector = planetary_distance * Point::new(true_anomaly.cos(), true_anomaly.sin());
+        let position_vector =
+            planetary_distance * Point::new(true_anomaly.cos(), true_anomaly.sin());
 
         self.satellite_planet.position = position_vector;
 
-
-        println!("anmomalies {} {} {}", mean_anomaly, eccentric_anomaly, true_anomaly);
+        println!(
+            "anmomalies {} {} {}",
+            mean_anomaly, eccentric_anomaly, true_anomaly
+        );
         println!("{:?}", position_vector)
     }
 }
