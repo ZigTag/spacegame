@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Orbit : MonoBehaviour
 {
+    private float initAngle = 0;
     private float time = 0;
     private float gravitationalConstant = 6.674f * Mathf.Pow(10, -11);
     private float sma;
@@ -45,6 +46,8 @@ public class Orbit : MonoBehaviour
         // Trust me this is fine
         float true_anomaly = Mathf.Atan2(Mathf.Sqrt(1.0f - (Mathf.Pow(eccentricity, 2))) * Mathf.Sin(eccentric_anomaly), Mathf.Cos(eccentric_anomaly) - eccentricity);
 
+        true_anomaly = true_anomaly + initAngle;
+
         float distance = sma * (1.0f - (eccentricity * Mathf.Cos(eccentric_anomaly)));
 
         float x_pos = distance * Mathf.Cos(true_anomaly);
@@ -60,15 +63,15 @@ public class Orbit : MonoBehaviour
 
         float distanceFromParent = Vector3.Distance(transform.position, parentPos);
 
-        float angle = (Mathf.Atan2(parentPos.y - transform.position.y, parentPos.x - transform.position.x));
+        float angle = (Mathf.Atan2(transform.position.y - parentPos.y, transform.position.x - parentPos.x));
 
-        print(angle);
+        initAngle = angle;
 
         sma = distanceFromParent * 1;
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
         time += Time.deltaTime;
 
