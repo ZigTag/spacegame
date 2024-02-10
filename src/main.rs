@@ -1,7 +1,3 @@
-//! Shows how to render simple primitive shapes with a single color.
-
-use std::f32::consts::PI;
-
 use bevy::{
     core_pipeline::clear_color::ClearColorConfig,
     prelude::*,
@@ -9,7 +5,9 @@ use bevy::{
     window::PrimaryWindow,
 };
 
-const G: f32 = 6.743e-11;
+mod utils;
+
+use utils::orbit;
 
 #[derive(Component)]
 struct MainCamera {}
@@ -51,21 +49,11 @@ impl Default for OrbitInfo {
     }
 }
 
-#[derive(Bundle)]
+#[derive(Bundle, Default)]
 struct PlanetBundle {
     planet: OrbitInfo,
     sprite: SpriteBundle,
     targetable: Targetable,
-}
-
-impl Default for PlanetBundle {
-    fn default() -> Self {
-        PlanetBundle {
-            planet: OrbitInfo::default(),
-            sprite: SpriteBundle::default(),
-            targetable: Targetable::default(),
-        }
-    }
 }
 
 fn main() {
@@ -290,59 +278,9 @@ fn move_objects(
         for &child in children.iter() {
             let (mut transform, planet) = planet_children_query.get_mut(child).unwrap();
 
-            let eccentricity: f32 = planet.eccentricity;
+            let orbital_position = orbit::calculate_orbital_position(origin_planet, planet, &timer);
 
-            // ((transform.translation.x -u 0.).powi(2) + (transform.translation.y - 0.).powi(2)).sqrt();
-
-            let gravitational_parameter = G * origin_planet.mass;
-
-            let semimajor_axis: f32 = planet.sma;
-
-            // let velocity = gravitational_parameter / planetary_distance.powi(2);
-
-            let period = 2.0 * PI * (semimajor_axis.powi(3) / gravitational_parameter).sqrt();
-
-            // let time = (2.0 * PI) * (semimajor_axis.powi(3) / gravitational_parameter).sqrt();
-
-            // let sweep = 2.0 * PI / time;
-
-            let mean_motion = 2. * PI / period;
-
-            let mean_anomaly = mean_motion * timer.elapsed_seconds();
-
-            let mut eccentric_anomaly: f32 = mean_anomaly;
-
-            if eccentricity >= 0.8 {
-                eccentric_anomaly = PI;
-            }
-
-            let mut pseudo_true_anomaly =
-                eccentric_anomaly - eccentricity * mean_anomaly.sin() - mean_anomaly;
-
-            let delta = 10e-8;
-            let mut i = 0;
-            let i_cap = 100;
-
-            while (pseudo_true_anomaly.abs() > delta) && (i < i_cap) {
-                eccentric_anomaly = eccentric_anomaly
-                    - pseudo_true_anomaly / (1. - (eccentricity * eccentric_anomaly.cos()));
-                pseudo_true_anomaly =
-                    eccentric_anomaly - eccentricity * eccentric_anomaly.sin() - mean_anomaly;
-                i += 1;
-            }
-
-            let true_anomaly = ((1. - eccentricity.powi(2)).sqrt() * eccentric_anomaly.sin())
-                .atan2(eccentric_anomaly.cos() - eccentricity);
-
-            let planetary_distance =
-                semimajor_axis * (1. - (eccentricity * eccentric_anomaly.cos()));
-
-            let position_vector =
-                planetary_distance * Vec3::new(true_anomaly.cos(), true_anomaly.sin(), 0.);
-
-            // let argument_of_periapsis =
-
-            transform.translation = position_vector;
+            transform.translation = orbital_position;
         }
     }
 }
