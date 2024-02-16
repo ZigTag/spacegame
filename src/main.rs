@@ -125,6 +125,10 @@ fn setup(
             n_body: NBody {
                 mass: 10.0,
                 velocity: Vec3::from((0., 100., 0.)),
+                prediction: Prediction {
+                    show: true,
+                    ..default()
+                },
             },
             ..default()
         })
@@ -207,41 +211,89 @@ fn move_objects(
     }
 }
 
+fn calculate_object_force(
+    body_position: &Vec3,
+    planet_position: &Vec3,
+    body_mass: f32,
+    planet_mass: f32,
+) -> Vec3 {
+    let pos_vector = body_position.clone() - planet_position.clone();
+
+    // r_hat
+    let pos_mag = (pos_vector.x.powi(2) + pos_vector.y.powi(2) + pos_vector.z.powi(2)).sqrt();
+    let pos_hat = pos_vector / pos_mag;
+
+    let force_mag = (G * body_mass * planet_mass) / pos_mag.powi(2);
+
+    force_mag * -pos_hat
+}
+
+fn calculate_object_forces(
+    body_position: &Vec3,
+    body_info: &NBody,
+    planet_query: &Query<(&Transform, &OrbitInfo), Without<NBody>>,
+) -> Vec3 {
+    let mut total_force = Vec3::default();
+
+    for (planet_position, planet_info) in planet_query {
+        if planet_info.mass <= 0.0 {
+            continue;
+        }
+
+        let force_vec = calculate_object_force(
+            body_position,
+            &planet_position.translation,
+            body_info.mass,
+            planet_info.mass,
+        );
+
+        total_force += force_vec;
+
+        // There's no way its this easy
+        // It really was that easy
+    }
+
+    total_force
+}
+
 fn n_body_real(
     mut body_query: Query<(&mut Transform, &mut NBody), Without<OrbitInfo>>,
     planet_query: Query<(&Transform, &OrbitInfo), Without<NBody>>,
     timer: Res<Time>,
+    mut gizmos: Gizmos,
 ) {
     for (mut body_position, mut body_info) in &mut body_query {
         if body_info.mass <= 0.0 {
             continue;
         }
 
-        let mut total_force = Vec3::default();
-
         let body_mass = body_info.mass;
 
-        for (planet_position, planet_info) in &planet_query {
-            if planet_info.mass <= 0.0 {
-                continue;
-            }
-
-            let pos_vector = body_position.translation - planet_position.translation;
-
-            // r_hat
-            let pos_mag =
-                (pos_vector.x.powi(2) + pos_vector.y.powi(2) + pos_vector.z.powi(2)).sqrt();
-            let pos_hat = pos_vector / pos_mag;
-
-            let force_mag = (G * body_info.mass * planet_info.mass) / pos_mag.powi(2);
-
-            total_force += force_mag * -pos_hat;
-
-            // There's no way its this easy
-        }
+        let total_force =
+            calculate_object_forces(&body_position.translation, &body_info, &planet_query);
 
         body_info.velocity += (total_force / body_mass) * timer.delta_seconds();
 
         body_position.translation += body_info.velocity * timer.delta_seconds();
+
+        if body_info.prediction.show {
+            let mut temp_velocity = body_info.velocity;
+            let mut temp_position = body_position.translation;
+
+            let time_step = body_info.prediction.time / body_info.prediction.segments as f32;
+
+            let mut segments: Vec<Vec2> = vec![];
+
+            for _ in 0..body_info.prediction.segments {
+                let temp_force = calculate_object_forces(&temp_position, &body_info, &planet_query);
+
+                temp_velocity += (temp_force / body_mass) * time_step;
+                temp_position += temp_velocity * time_step;
+
+                segments.push(Vec2::from((temp_position.x, temp_position.y)));
+            }
+
+            gizmos.linestrip_2d(segments, Color::CYAN);
+        }
     }
 }

@@ -1,5 +1,21 @@
 use bevy::prelude::*;
 
+pub struct Prediction {
+    pub time: f32,
+    pub segments: i32,
+    pub show: bool,
+}
+
+impl Default for Prediction {
+    fn default() -> Self {
+        Prediction {
+            time: 20.0,
+            segments: 32,
+            show: false,
+        }
+    }
+}
+
 #[derive(Component)]
 pub struct MainCamera {}
 
@@ -23,7 +39,7 @@ impl Default for Targetable {
 #[derive(Component)]
 pub struct Sun {}
 
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub struct OrbitInfo {
     pub mass: f32,
     pub sma: f32,
@@ -44,6 +60,7 @@ impl Default for OrbitInfo {
 pub struct NBody {
     pub mass: f32,
     pub velocity: Vec3,
+    pub prediction: Prediction,
 }
 
 impl Default for NBody {
@@ -51,6 +68,7 @@ impl Default for NBody {
         NBody {
             mass: 10.0,
             velocity: Vec3::default(),
+            prediction: Prediction::default(),
         }
     }
 }
