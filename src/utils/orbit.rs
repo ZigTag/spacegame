@@ -2,8 +2,7 @@ use std::f32::consts::PI;
 
 use bevy::{ecs::system::Res, math::Vec3, time::Time};
 
-use crate::utils::consts::G;
-use crate::OrbitInfo;
+use crate::utils::{components::OrbitInfo, consts::G};
 
 pub fn calculate_orbital_position(
     origin_planet: &OrbitInfo,
@@ -60,4 +59,3 @@ pub fn calculate_orbital_position(
 
     // let argument_of_periapsis =
 }
-
