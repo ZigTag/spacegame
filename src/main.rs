@@ -7,7 +7,7 @@ use bevy::{
 
 mod utils;
 
-use utils::{camera::camera_handler, components::*, orbit};
+use utils::{camera::camera_handler, components::*, consts::G, orbit};
 
 fn main() {
     App::new()
@@ -17,6 +17,7 @@ fn main() {
             Update,
             (
                 move_objects.before(camera_handler),
+                n_body_real.before(camera_handler).after(move_objects),
                 camera_handler,
                 target_handler,
             ),
@@ -110,11 +111,30 @@ fn setup(
         })
         .id();
 
+    let n_body_object = commands
+        .spawn(NBodyBundle {
+            sprite: SpriteBundle {
+                sprite: Sprite {
+                    color: Color::rgb(1., 1., 1.),
+                    custom_size: Some(Vec2::new(10.0, 10.0)),
+                    ..default()
+                },
+                transform: Transform::from_translation(Vec3::new(100., 0., 0.)),
+                ..default()
+            },
+            n_body: NBody {
+                mass: 10.0,
+                velocity: Vec3::from((0., 100., 0.)),
+            },
+            ..default()
+        })
+        .id();
+
     commands.entity(satellite).push_children(&[moon]);
 
     commands.entity(sun).push_children(&[satellite]);
 
-    commands.entity(world).push_children(&[sun]);
+    commands.entity(world).push_children(&[sun, n_body_object]);
 }
 
 fn target_handler(
@@ -184,5 +204,44 @@ fn move_objects(
 
             transform.translation = orbital_position;
         }
+    }
+}
+
+fn n_body_real(
+    mut body_query: Query<(&mut Transform, &mut NBody), Without<OrbitInfo>>,
+    planet_query: Query<(&Transform, &OrbitInfo), Without<NBody>>,
+    timer: Res<Time>,
+) {
+    for (mut body_position, mut body_info) in &mut body_query {
+        if body_info.mass <= 0.0 {
+            continue;
+        }
+
+        let mut total_force = Vec3::default();
+
+        let body_mass = body_info.mass;
+
+        for (planet_position, planet_info) in &planet_query {
+            if planet_info.mass <= 0.0 {
+                continue;
+            }
+
+            let pos_vector = body_position.translation - planet_position.translation;
+
+            // r_hat
+            let pos_mag =
+                (pos_vector.x.powi(2) + pos_vector.y.powi(2) + pos_vector.z.powi(2)).sqrt();
+            let pos_hat = pos_vector / pos_mag;
+
+            let force_mag = (G * body_info.mass * planet_info.mass) / pos_mag.powi(2);
+
+            total_force += force_mag * -pos_hat;
+
+            // There's no way its this easy
+        }
+
+        body_info.velocity += (total_force / body_mass) * timer.delta_seconds();
+
+        body_position.translation += body_info.velocity * timer.delta_seconds();
     }
 }

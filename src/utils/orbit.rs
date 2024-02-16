@@ -55,7 +55,7 @@ pub fn calculate_orbital_position(
 
     let planetary_distance = semimajor_axis * (1. - (eccentricity * eccentric_anomaly.cos()));
 
-    return planetary_distance * Vec3::new(true_anomaly.cos(), true_anomaly.sin(), 0.);
+    planetary_distance * Vec3::new(true_anomaly.cos(), true_anomaly.sin(), 0.)
 
     // let argument_of_periapsis =
 }

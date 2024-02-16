@@ -40,9 +40,31 @@ impl Default for OrbitInfo {
     }
 }
 
+#[derive(Component)]
+pub struct NBody {
+    pub mass: f32,
+    pub velocity: Vec3,
+}
+
+impl Default for NBody {
+    fn default() -> Self {
+        NBody {
+            mass: 10.0,
+            velocity: Vec3::default(),
+        }
+    }
+}
+
 #[derive(Bundle, Default)]
 pub struct PlanetBundle {
     pub planet: OrbitInfo,
+    pub sprite: SpriteBundle,
+    pub targetable: Targetable,
+}
+
+#[derive(Bundle, Default)]
+pub struct NBodyBundle {
+    pub n_body: NBody,
     pub sprite: SpriteBundle,
     pub targetable: Targetable,
 }
