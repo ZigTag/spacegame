@@ -1,13 +1,13 @@
 use std::f32::consts::PI;
 
-use bevy::{ecs::system::Res, math::Vec3, time::Time};
+use bevy::prelude::*;
 
 use crate::utils::{components::OrbitInfo, consts::G};
 
 pub fn calculate_orbital_position(
     origin_planet: &OrbitInfo,
     planet: &OrbitInfo,
-    timer: &Res<Time>,
+    time: &f32,
 ) -> Vec3 {
     let eccentricity: f32 = planet.eccentricity;
 
@@ -27,7 +27,7 @@ pub fn calculate_orbital_position(
 
     let mean_motion = 2. * PI / period;
 
-    let mean_anomaly = mean_motion * timer.elapsed_seconds();
+    let mean_anomaly = mean_motion * time;
 
     let mut eccentric_anomaly: f32 = mean_anomaly;
 

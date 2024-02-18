@@ -10,7 +10,7 @@ impl Default for Prediction {
     fn default() -> Self {
         Prediction {
             time: 20.0,
-            segments: 32,
+            segments: 128,
             show: false,
         }
     }
@@ -39,7 +39,7 @@ impl Default for Targetable {
 #[derive(Component)]
 pub struct Sun {}
 
-#[derive(Component, Clone)]
+#[derive(Component, Clone, Debug)]
 pub struct OrbitInfo {
     pub mass: f32,
     pub sma: f32,
