@@ -1,10 +1,7 @@
 use std::collections::HashMap;
 
 use bevy::{
-    core_pipeline::clear_color::ClearColorConfig,
-    prelude::*,
-    sprite::collide_aabb::{collide, Collision},
-    window::PrimaryWindow,
+    math::bounding::{Aabb2d, IntersectsVolume}, prelude::*, window::PrimaryWindow
 };
 
 mod utils;
@@ -39,7 +36,7 @@ fn setup(
 ) {
     commands.spawn((
         Camera2dBundle {
-            camera_2d: Camera2d {
+            camera: Camera {
                 clear_color: ClearColorConfig::Custom(Color::BLACK),
                 ..default()
             },
@@ -150,7 +147,7 @@ fn setup(
 
 fn target_handler(
     mut targetable_query: Query<(&mut Targetable, &GlobalTransform, &Sprite)>,
-    buttons: Res<Input<MouseButton>>,
+    buttons: Res<ButtonInput<MouseButton>>,
     window_query: Query<&Window, With<PrimaryWindow>>,
     camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     mut reset_targets: Local<bool>,
@@ -166,7 +163,7 @@ fn target_handler(
         }
 
         if buttons.just_pressed(MouseButton::Left) {
-            let mut mouse_pos = Vec3::default();
+            let mut mouse_pos = Vec2::default();
 
             let (camera, camera_transform) = camera_query.single();
 
@@ -176,7 +173,7 @@ fn target_handler(
                 .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
                 .map(|ray| ray.origin.truncate())
             {
-                mouse_pos = Vec3::from((position, 0.));
+                mouse_pos = Vec2::from(position);
             };
 
             let mut sprite_size = Vec2::new(10.0, 10.0);
@@ -187,14 +184,15 @@ fn target_handler(
 
             let target_pos = Vec3::from(transform.affine().translation);
 
-            let bounding = collide(target_pos, sprite_size, mouse_pos, Vec2::new(2., 2.));
+            let collision = Aabb2d::new(Vec2::from((target_pos.x, target_pos.y)), sprite_size / 2.)
+            .intersects(&Aabb2d::new(mouse_pos, Vec2::new(2., 2.) / 2.));
 
-            if let Some(bounding) = bounding {
-                if bounding == Collision::Inside {
-                    targetable.is_targeted = true;
-                    targetable.new_target = true;
-                    *reset_targets = true;
-                }
+            // let bounding = collide(target_pos, sprite_size, mouse_pos, Vec2::new(2., 2.));
+
+            if collision {
+                targetable.is_targeted = true;
+                targetable.new_target = true;
+                *reset_targets = true;
             }
         }
     }
@@ -233,7 +231,7 @@ fn calculate_object_force(
 
     let force_mag = (G * body_mass * planet_mass) / pos_mag.powi(2);
 
-    println!("{}", force_mag);
+    // println!("{}", force_mag);
 
     force_mag * -pos_hat
 }
@@ -311,11 +309,13 @@ fn when_she_relative_to_my_absolute(
     for child in children {
         // println!("{}", hash_on_my_map[&child].1);
 
-        let (child_children, mut position, planet_info, _) =
-            hash_on_my_map.get_mut(&child).unwrap();
+        let (child_children, _, planet_info, _) =
+            hash_on_my_map[&child].clone();
 
-        position =
-            parent_pos + calculate_orbital_position(&parent_planet, &planet_info, &temp_time);
+        let position =
+        parent_pos + calculate_orbital_position(&parent_planet, &planet_info, &temp_time);
+
+        hash_on_my_map.get_mut(&child).unwrap().1 = position;
 
         // println!("{}", adjusted_pos);
 
@@ -428,22 +428,24 @@ fn n_body_real(
                     &when_she_hash_on_my_map,
                 );
 
-                if _segment == 0 {
-                    println!("{:?}", temp_force);
-                }
+                // if _segment == 0 {
+                //     println!("{:?}", temp_force);
+                // }
 
                 segments.push(Vec2::from((temp_position.x, temp_position.y)));
 
-                for (i, j) in &when_she_hash_on_my_map {
-                    if !orbit_lines.contains_key(i) {
-                        orbit_lines.insert(*i, vec![]);
-                    }
+                // Does Orbit Lines, fully functional.
 
-                    orbit_lines
-                        .get_mut(i)
-                        .unwrap()
-                        .push(Vec2::from((j.1.x, j.1.y)));
-                }
+                // for (i, j) in &when_she_hash_on_my_map {
+                //     if !orbit_lines.contains_key(i) {
+                //         orbit_lines.insert(*i, vec![]);
+                //     }
+
+                //     orbit_lines
+                //         .get_mut(i)
+                //         .unwrap()
+                //         .push(Vec2::from((j.1.x, j.1.y)));
+                // }
 
                 temp_velocity += (temp_force / body_mass) * time_step;
                 temp_position += temp_velocity * time_step;
@@ -451,9 +453,9 @@ fn n_body_real(
                 temp_time += time_step;
             }
 
-            for (_, j) in orbit_lines {
-                gizmos.linestrip_2d(j, Color::TEAL)
-            }
+            // for (_, j) in orbit_lines {
+            //     gizmos.linestrip_2d(j, Color::TEAL)
+            // }
 
             gizmos.linestrip_2d(segments, Color::CYAN);
         }
