@@ -304,22 +304,28 @@ type WhenSheHash = HashMap<Entity, (Vec<Entity>, Vec3, OrbitInfo, bool)>;
 fn when_she_relative_to_my_absolute(
     children: Vec<Entity>,
     parent_pos: Vec3,
+    parent_planet: OrbitInfo,
     hash_on_my_map: &mut WhenSheHash,
+    temp_time: f32,
 ) {
     for child in children {
         // println!("{}", hash_on_my_map[&child].1);
 
-        let adjusted_pos = parent_pos + hash_on_my_map[&child].1;
+        let (child_children, mut position, planet_info, _) =
+            hash_on_my_map.get_mut(&child).unwrap();
+
+        position =
+            parent_pos + calculate_orbital_position(&parent_planet, &planet_info, &temp_time);
 
         // println!("{}", adjusted_pos);
 
-        hash_on_my_map.get_mut(&child).unwrap().1 = adjusted_pos;
-
         when_she_relative_to_my_absolute(
-            hash_on_my_map[&child].0.clone(),
-            adjusted_pos,
+            child_children.clone(),
+            position,
+            planet_info.clone(),
             hash_on_my_map,
-        )
+            temp_time,
+        );
     }
 }
 
@@ -392,18 +398,17 @@ fn n_body_real(
             let mut orbit_lines: HashMap<Entity, Vec<Vec2>> = HashMap::new();
 
             for _segment in 0..body_info.prediction.segments {
-                for key in when_she_hash_on_my_map.clone().keys() {
-                    let origin_planet = when_she_hash_on_my_map[key].2.clone();
+                // for key in when_she_hash_on_my_map.clone().keys() {
+                //     let origin_planet = when_she_hash_on_my_map[key].2.clone();
 
-                    for key2 in &when_she_hash_on_my_map[key].0.clone() {
-                        let child_planet = when_she_hash_on_my_map[key2].2.clone();
+                //     for key2 in &when_she_hash_on_my_map[key].0.clone() {
+                //         let child_planet = when_she_hash_on_my_map[key2].2.clone();
 
-                        when_she_hash_on_my_map.get_mut(key).unwrap().1 =
-                            calculate_orbital_position(&origin_planet, &child_planet, &temp_time);
+                //         when_she_hash_on_my_map.get_mut(key).unwrap().1 =
 
-                        // println!("{:?}", when_she_hash_on_my_map);
-                    }
-                }
+                //         // println!("{:?}", when_she_hash_on_my_map);
+                //     }
+                // }
 
                 if let Some(sun_key) = *sun_key {
                     let sun_items = when_she_hash_on_my_map[&sun_key].clone();
@@ -411,7 +416,9 @@ fn n_body_real(
                     when_she_relative_to_my_absolute(
                         sun_items.0.clone(),
                         sun_items.1,
+                        sun_items.2,
                         &mut when_she_hash_on_my_map,
+                        temp_time,
                     )
                 }
 
