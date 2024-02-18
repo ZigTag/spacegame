@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use bevy::prelude::*;
 
 pub struct Prediction {
@@ -86,3 +88,5 @@ pub struct NBodyBundle {
     pub sprite: SpriteBundle,
     pub targetable: Targetable,
 }
+
+pub type PlanetHashMap = HashMap<Entity, (Vec<Entity>, Vec3, OrbitInfo, bool)>;
