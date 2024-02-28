@@ -11,8 +11,8 @@ pub struct Prediction {
 impl Default for Prediction {
     fn default() -> Self {
         Prediction {
-            time: 20.0,
-            segments: 128,
+            time: 10.0,
+            segments: 1024,
             show: false,
         }
     }
@@ -75,6 +75,9 @@ impl Default for NBody {
     }
 }
 
+#[derive(Component)]
+pub struct ReferenceFrame {}
+
 #[derive(Bundle, Default)]
 pub struct PlanetBundle {
     pub planet: OrbitInfo,
@@ -89,4 +92,4 @@ pub struct NBodyBundle {
     pub targetable: Targetable,
 }
 
-pub type PlanetHashMap = HashMap<Entity, (Vec<Entity>, Vec3, OrbitInfo, bool)>;
+pub type PlanetHashMap = HashMap<Entity, (Vec<Entity>, Vec3, OrbitInfo, bool, bool)>;

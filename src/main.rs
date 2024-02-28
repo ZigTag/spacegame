@@ -77,27 +77,30 @@ fn setup(
         .id();
 
     let satellite = commands
-        .spawn(PlanetBundle {
-            sprite: SpriteBundle {
-                sprite: Sprite {
-                    color: Color::rgb(1., 1., 1.),
-                    custom_size: Some(Vec2::new(25.0, 25.0)),
+        .spawn((
+            PlanetBundle {
+                sprite: SpriteBundle {
+                    sprite: Sprite {
+                        color: Color::rgb(1., 1., 1.),
+                        custom_size: Some(Vec2::new(25.0, 25.0)),
+                        ..default()
+                    },
+                    transform: Transform::from_translation(Vec3::new(200., 0., 0.)),
                     ..default()
                 },
-                transform: Transform::from_translation(Vec3::new(200., 0., 0.)),
-                ..default()
+                planet: OrbitInfo {
+                    mass: 5.0e14,
+                    sma: 200.,
+                    eccentricity: 0.,
+                },
+                ..Default::default()
             },
-            planet: OrbitInfo {
-                mass: 5.0e14,
-                sma: 200.,
-                eccentricity: 0.,
-            },
-            ..Default::default()
-        })
+            ReferenceFrame {},
+        ))
         .id();
 
     let moon = commands
-        .spawn(PlanetBundle {
+        .spawn((PlanetBundle {
             sprite: SpriteBundle {
                 sprite: Sprite {
                     color: Color::rgb(1., 1., 1.),
@@ -113,7 +116,9 @@ fn setup(
                 eccentricity: 0.,
             },
             ..default()
-        })
+        },
+        // ReferenceFrame {},
+    ))
         .id();
 
     let n_body_object = commands

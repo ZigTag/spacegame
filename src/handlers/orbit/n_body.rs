@@ -4,13 +4,14 @@ use crate::utils::{components::*, orbit};
 
 pub fn n_body_computation(
     mut body_query: Query<(&mut Transform, &mut NBody), Without<OrbitInfo>>,
-    planet_query: Query<(&GlobalTransform, &OrbitInfo), Without<NBody>>,
+    planet_query: Query<(&GlobalTransform, &OrbitInfo, Option<&ReferenceFrame>), Without<NBody>>,
     shadow_planet_query: Query<(
         Entity,
         Option<&Children>,
         &Transform,
         &OrbitInfo,
         Option<&Sun>,
+        Option<&ReferenceFrame>,
     )>,
     timer: Res<Time>,
     mut gizmos: Gizmos,
@@ -24,7 +25,7 @@ pub fn n_body_computation(
 
         let body_mass = body_info.mass;
 
-        let total_force =
+        let (total_force, global_frame) =
             orbit::n_body::calculate_object_forces(&body_position.translation, &body_info, &planet_query);
 
         body_info.velocity += (total_force / body_mass) * timer.delta_seconds();
@@ -33,7 +34,7 @@ pub fn n_body_computation(
 
         if body_info.prediction.show {
             if local_planet_hash_map.keys().len() == 0 {
-                for (entity_id, children, transform, orbit_info, sun) in &shadow_planet_query {
+                for (entity_id, children, transform, orbit_info, sun, reference_frame) in &shadow_planet_query {
                     let mut entity_children = vec![];
 
                     if let Some(children) = children {
@@ -53,6 +54,7 @@ pub fn n_body_computation(
                             transform.translation,
                             orbit_info.clone(),
                             sun.is_some(),
+                            reference_frame.is_some(),
                         ),
                     );
                 }
@@ -62,6 +64,7 @@ pub fn n_body_computation(
 
             let mut temp_velocity = body_info.velocity;
             let mut temp_position = body_position.translation;
+            let mut temp_frame = Vec3::default();
             let mut temp_time = timer.elapsed_seconds();
 
             let time_step = body_info.prediction.time / body_info.prediction.segments as f32;
@@ -86,7 +89,7 @@ pub fn n_body_computation(
                 if let Some(sun_key) = *sun_key {
                     let sun_items = local_planet_hash_map[&sun_key].clone();
 
-                    orbit::n_body::relative_to_absolute(
+                    temp_frame = orbit::n_body::relative_to_absolute(
                         sun_items.0.clone(),
                         sun_items.1,
                         sun_items.2,
@@ -101,11 +104,15 @@ pub fn n_body_computation(
                     &local_planet_hash_map,
                 );
 
-                // if _segment == 0 {
-                //     println!("{:?}", temp_force);
+                // if _segment == 0 || _segment == 1 || _segment == 2 || _segment == 3 {
+                //     println!("{:?}, {:?}, {:?}", temp_force, temp_frame, global_frame);
                 // }
 
-                segments.push(Vec2::from((temp_position.x, temp_position.y)));
+                // println!("{:?}", temp_frame);
+
+                if _segment != 0 {
+                    segments.push(Vec2::from((temp_position.x - temp_frame.x + global_frame.x, temp_position.y - temp_frame.y + global_frame.y)));
+                }
 
                 // Does Orbit Lines, fully functional.
 
@@ -125,6 +132,8 @@ pub fn n_body_computation(
 
                 temp_time += time_step;
             }
+
+            // println!("{:?}\r", segments);
 
             // for (_, j) in orbit_lines {
             //     gizmos.linestrip_2d(j, Color::TEAL)
