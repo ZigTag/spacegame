@@ -25,8 +25,11 @@ pub fn n_body_computation(
 
         let body_mass = body_info.mass;
 
-        let (total_force, global_frame) =
-            orbit::n_body::calculate_object_forces(&body_position.translation, &body_info, &planet_query);
+        let (total_force, global_frame) = orbit::n_body::calculate_object_forces(
+            &body_position.translation,
+            &body_info,
+            &planet_query,
+        );
 
         body_info.velocity += (total_force / body_mass) * timer.delta_seconds();
 
@@ -34,7 +37,9 @@ pub fn n_body_computation(
 
         if body_info.prediction.show {
             if local_planet_hash_map.keys().len() == 0 {
-                for (entity_id, children, transform, orbit_info, sun, reference_frame) in &shadow_planet_query {
+                for (entity_id, children, transform, orbit_info, sun, reference_frame) in
+                    &shadow_planet_query
+                {
                     let mut entity_children = vec![];
 
                     if let Some(children) = children {
@@ -111,7 +116,10 @@ pub fn n_body_computation(
                 // println!("{:?}", temp_frame);
 
                 if _segment != 0 {
-                    segments.push(Vec2::from((temp_position.x - temp_frame.x + global_frame.x, temp_position.y - temp_frame.y + global_frame.y)));
+                    segments.push(Vec2::from((
+                        temp_position.x - temp_frame.x + global_frame.x,
+                        temp_position.y - temp_frame.y + global_frame.y,
+                    )));
                 }
 
                 // Does Orbit Lines, fully functional.

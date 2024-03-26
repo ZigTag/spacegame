@@ -106,8 +106,12 @@ pub fn relative_to_absolute(
             ref_pos = position
         }
 
-        let position =
-        parent_pos + orbit::approximations::calculate_orbital_position(&parent_planet, &planet_info, &temp_time);
+        let position = parent_pos
+            + orbit::approximations::calculate_orbital_position(
+                &parent_planet,
+                &planet_info,
+                &temp_time,
+            );
 
         hash_on_my_map.get_mut(&child).unwrap().1 = position;
 

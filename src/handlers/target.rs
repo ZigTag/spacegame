@@ -1,4 +1,8 @@
-use bevy::{math::bounding::{Aabb2d, IntersectsVolume}, prelude::*, window::PrimaryWindow};
+use bevy::{
+    math::bounding::{Aabb2d, IntersectsVolume},
+    prelude::*,
+    window::PrimaryWindow,
+};
 
 use crate::utils::components::*;
 
@@ -42,7 +46,7 @@ pub fn target_handler(
             let target_pos = Vec3::from(transform.affine().translation);
 
             let collision = Aabb2d::new(Vec2::from((target_pos.x, target_pos.y)), sprite_size / 2.)
-            .intersects(&Aabb2d::new(mouse_pos, Vec2::new(2., 2.) / 2.));
+                .intersects(&Aabb2d::new(mouse_pos, Vec2::new(2., 2.) / 2.));
 
             // let bounding = collide(target_pos, sprite_size, mouse_pos, Vec2::new(2., 2.));
 

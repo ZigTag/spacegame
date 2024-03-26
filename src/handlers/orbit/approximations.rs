@@ -13,8 +13,11 @@ pub fn move_objects(
         for &child in children.iter() {
             let (mut transform, planet) = planet_children_query.get_mut(child).unwrap();
 
-            let orbital_position =
-                orbit::approximations::calculate_orbital_position(origin_planet, planet, &timer.elapsed_seconds());
+            let orbital_position = orbit::approximations::calculate_orbital_position(
+                origin_planet,
+                planet,
+                &timer.elapsed_seconds(),
+            );
 
             transform.translation = orbital_position;
         }

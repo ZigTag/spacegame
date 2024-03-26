@@ -1,17 +1,12 @@
 use bevy::prelude::*;
 
-mod utils;
 mod handlers;
+mod utils;
 
-use utils::{
-    camera::camera_handler,
-    components::*,
-};
+use utils::{camera::camera_handler, components::*};
 
 use handlers::{
-    target::target_handler,
-    orbit::approximations::move_objects,
-    orbit::n_body::n_body_computation,
+    orbit::approximations::move_objects, orbit::n_body::n_body_computation, target::target_handler,
 };
 
 fn main() {
@@ -22,7 +17,9 @@ fn main() {
             Update,
             (
                 move_objects.before(camera_handler),
-                n_body_computation.before(camera_handler).after(move_objects),
+                n_body_computation
+                    .before(camera_handler)
+                    .after(move_objects),
                 camera_handler,
                 target_handler,
             ),
@@ -70,7 +67,7 @@ fn setup(
                     is_targeted: true,
                     ..default()
                 },
-                ..default()
+                //..default()
             },
             Sun {},
         ))
@@ -100,25 +97,26 @@ fn setup(
         .id();
 
     let moon = commands
-        .spawn((PlanetBundle {
-            sprite: SpriteBundle {
-                sprite: Sprite {
-                    color: Color::rgb(1., 1., 1.),
-                    custom_size: Some(Vec2::new(10.0, 10.0)),
+        .spawn((
+            PlanetBundle {
+                sprite: SpriteBundle {
+                    sprite: Sprite {
+                        color: Color::rgb(1., 1., 1.),
+                        custom_size: Some(Vec2::new(10.0, 10.0)),
+                        ..default()
+                    },
+                    transform: Transform::from_translation(Vec3::new(200., 0., 0.)),
                     ..default()
                 },
-                transform: Transform::from_translation(Vec3::new(200., 0., 0.)),
+                planet: OrbitInfo {
+                    mass: 50.,
+                    sma: 30.,
+                    eccentricity: 0.,
+                },
                 ..default()
             },
-            planet: OrbitInfo {
-                mass: 50.,
-                sma: 30.,
-                eccentricity: 0.,
-            },
-            ..default()
-        },
-        // ReferenceFrame {},
-    ))
+            // ReferenceFrame {},
+        ))
         .id();
 
     let n_body_object = commands
